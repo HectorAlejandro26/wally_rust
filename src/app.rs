@@ -43,6 +43,7 @@ impl AsfyWallApp {
         } else {
             args.external_args
         };
+        let prev = args.prev;
 
         let images_list = WallEngine::scan_directory(&images_dir)?;
 
@@ -59,6 +60,7 @@ impl AsfyWallApp {
             current_cache,
             cache_manager,
             args.dry_run,
+            prev,
         )?;
 
         engine.execute(reorder, args.set_index)?;

@@ -13,6 +13,7 @@ pub struct WallEngine {
     cache: Cache,
     cache_manager: CacheManager,
     dry_run: bool,
+    prev: bool,
 }
 
 impl WallEngine {
@@ -52,6 +53,7 @@ impl WallEngine {
         cache: Cache,
         cache_manager: CacheManager,
         dry_run: bool,
+        prev: bool,
     ) -> Result<Self> {
         let images_dir = images_dir
             .canonicalize()
@@ -72,6 +74,7 @@ impl WallEngine {
             cache,
             cache_manager,
             dry_run,
+            prev,
         })
     }
 
@@ -97,8 +100,16 @@ impl WallEngine {
 
         self.spawn_command(image_path)?;
 
-        self.cache.index_now = (self.cache.index_now + 1) % self.cache.images.len();
-        self.cache_manager.write(&self.cache)?;
+        let len = self.cache.images.len();
+        self.cache.index_now = if self.prev {
+            (self.cache.index_now + len - 1) % len
+        } else {
+            (self.cache.index_now + 1) % len
+        };
+
+        if !self.dry_run {
+            self.cache_manager.write(&self.cache)?;
+        }
 
         Ok(())
     }
@@ -155,7 +166,7 @@ impl WallEngine {
             }
         } else {
             println!(
-                "Dry run would execute:\nawww img {} {}",
+                "awww img {} {}",
                 image_path.display(),
                 self.external_args.join(" ")
             );

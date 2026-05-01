@@ -40,6 +40,9 @@ pub struct Args {
     #[arg(long, help = "Jump directly to a specific image index in the cache")]
     pub set_index: Option<usize>,
 
+    #[arg(short, long)]
+    pub prev: bool,
+
     #[arg(last = true, help = "Arguments to pass directly to the external command (awww)")]
     pub external_args: Vec<String>,
 }
