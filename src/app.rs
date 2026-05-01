@@ -63,6 +63,10 @@ impl AsfyWallApp {
             prev,
         )?;
 
+        if args.status {
+            return engine.print_status();
+        }
+
         engine.execute(reorder, args.set_index)?;
 
         Ok(())

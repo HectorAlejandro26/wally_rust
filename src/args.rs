@@ -34,6 +34,9 @@ pub struct Args {
     #[arg(short, long, help = "Override the base directory where images are stored")]
     pub images_dir: Option<String>,
 
+    #[arg(long, help = "Shows the path to actual image and its index", conflicts_with_all = ["set_index", "reorder"])]
+    pub status: bool,
+
     #[arg(long, help = "Preview what would be executed without actually calling 'awww'")]
     pub dry_run: bool,
 

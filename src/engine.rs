@@ -17,6 +17,26 @@ pub struct WallEngine {
 }
 
 impl WallEngine {
+    pub fn print_status(&self) -> Result<()> {
+        if self.cache.images.is_empty() {
+            bail!("Cache is empty");
+        }
+
+        let count = self.cache.images.len();
+
+        let idx = if self.cache.index_now >= count {
+            0
+        } else {
+            self.cache.index_now
+        };
+
+        let image = &self.cache.images[idx];
+        let image_path = self.cache.images_dir.join(image);
+
+        println!("[{}:{}] \"{}\"", idx, count, image_path.display());
+        Ok(())
+    }
+
     pub fn scan_directory(dir: &PathBuf) -> Result<Vec<String>> {
         let dir = dir
             .canonicalize()
@@ -83,33 +103,38 @@ impl WallEngine {
             bail!("Directory has no images to use");
         }
 
+        let len = self.cache.images.len();
+
+        // Decidir el índice antes de ejecutar
         if reorder {
             self.reorder_images();
-        }
-
-        if let Some(idx) = set_index {
+        } else if let Some(idx) = set_index {
             self.cache.index_now = idx;
+        } else {
+            // Avanzamos o retrocedemos el índice basándonos en el guardado previamente
+            self.cache.index_now = if self.prev {
+                (self.cache.index_now + len - 1) % len
+            } else {
+                (self.cache.index_now + 1) % len
+            };
         }
 
-        if self.cache.index_now >= self.cache.images.len() {
+        if self.cache.index_now >= len {
             self.cache.index_now = 0;
         }
 
+        // Obtener y mostrar la imagen actual
         let current_image = &self.cache.images[self.cache.index_now];
         let image_path = self.images_dir.join(current_image);
 
         self.spawn_command(image_path)?;
 
-        let len = self.cache.images.len();
-        self.cache.index_now = if self.prev {
-            (self.cache.index_now + len - 1) % len
-        } else {
-            (self.cache.index_now + 1) % len
-        };
-
+        // Guardar exactamente el índice actual que acabamos de mostrar
         if !self.dry_run {
             self.cache_manager.write(&self.cache)?;
         }
+
+        self.print_status()?;
 
         Ok(())
     }
